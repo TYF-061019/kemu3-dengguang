@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>科目三模拟灯光考试</title>
+<style>
+  :root {
+    --bg: #F1F2F4;
+    --card: #FFFFFF;
+    --surface: #F5F6F8;
+    --text: #1A1A1A;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+    --brand: #0FDC78;
+    --brand-strong: #05994F;
+    --brand-soft: #E5FFF2;
+    --brand-text: #004D26;
+    --brand-on: #004D26;
+    --success: #1DC981;
+    --danger: #E8463A;
+    --danger-soft: #FDEDEC;
+    --warning: #EFAA17;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0F1113;
+      --card: #1A1D20;
+      --surface: #23272B;
+      --text: #E8EAED;
+      --text-muted: #9AA3AD;
+      --border: #2E333A;
+      --brand: #32F08C;
+      --brand-strong: #0AB861;
+      --brand-soft: #10301F;
+      --brand-text: #E5FFF2;
+      --brand-on: #004D26;
+      --danger-soft: #3A1F1D;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    padding: 0;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 12px; }
+
+  /* 顶部 */
+  .topbar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: 8px 0 10px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .topbar h1 { font-size: 17px; font-weight: 600; }
+  .score-pill {
+    font-size: 12px; color: var(--brand-text);
+    background: var(--brand-soft); border-radius: 999px;
+    padding: 4px 12px; white-space: nowrap; font-weight: 500;
+  }
+
+  /* 页签 */
+  .tabs {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    background: var(--surface); border-radius: 12px; padding: 4px; margin-bottom: 12px;
+  }
+  .tab {
+    border: none; background: transparent; color: var(--text-muted);
+    font-size: 14px; font-weight: 500; padding: 8px 0; border-radius: 9px; cursor: pointer;
+  }
+  .tab.active { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+  /* 卡片 */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px; margin-bottom: 12px;
+  }
+
+  /* 进度 */
+  .progress { height: 6px; background: var(--surface); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
+  .progress-fill { height: 100%; width: 0; background: var(--brand); border-radius: 999px; transition: width .2s ease; }
+
+  .q-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .q-text { font-size: 18px; font-weight: 600; margin-bottom: 14px; }
+  .q-text small { display: block; font-size: 12px; color: var(--text-muted); font-weight: 400; margin-bottom: 4px; }
+
+  .opt {
+    display: block; width: 100%; text-align: left;
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px;
+    font-size: 15px; color: var(--text); cursor: pointer;
+    transition: border-color .12s ease, background-color .12s ease;
+  }
+  .opt:active { background: var(--surface); }
+  .opt:disabled { cursor: default; }
+  .opt.correct { border-color: var(--success); background: var(--brand-soft); font-weight: 600; }
+  .opt.wrong { border-color: var(--danger); background: var(--danger-soft); }
+  .opt:disabled:not(.correct):not(.wrong) { opacity: .55; }
+
+  .feedback {
+    background: var(--surface); border-radius: var(--radius); padding: 12px 14px;
+    margin: 4px 0 14px; font-size: 14px;
+  }
+  .fb-line { font-weight: 600; }
+  .fb-line.good { color: var(--success); }
+  .fb-line.bad { color: var(--danger); }
+  .fb-op { margin-top: 4px; }
+  .fb-tip { margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+
+  .btn {
+    display: block; width: 100%; border: none; border-radius: var(--radius);
+    background: var(--brand); color: var(--brand-on);
+    font-size: 16px; font-weight: 600; padding: 13px 0; cursor: pointer;
+  }
+  .btn:disabled { background: var(--surface); color: var(--text-muted); }
+
+  /* 成绩 */
+  .res-score { font-size: 40px; font-weight: 700; text-align: center; margin: 8px 0 4px; }
+  .res-grade { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 16px; }
+  .res-sub { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+  .wrow {
+    background: var(--surface); border-left: 3px solid var(--danger);
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+  }
+  .wrow-q { font-size: 14px; font-weight: 500; }
+  .wrow-a { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  /* 口诀 */
+  .group { margin-bottom: 14px; }
+  .group h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+  .item {
+    background: var(--surface); border-radius: 8px; padding: 10px 12px;
+    margin-bottom: 6px; font-size: 14px;
+  }
+  .item b { display: block; font-size: 12px; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
+  .hidden { display: none; }
+  .footer { text-align: center; font-size: 12px; color: var(--text-muted); padding: 8px 0 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <h1>科目三模拟灯光</h1>
+    <span class="score-pill" id="scorePill">答对 0 / 16</span>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab active" id="tabQuiz">模拟考试</button>
+    <button class="tab" id="tabStudy">口诀速记</button>
+  </div>
+
+  <!-- 模拟考试 -->
+  <div id="viewQuiz">
+    <div class="card" id="quizCard">
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+      <div id="quizBody"></div>
+    </div>
+  </div>
+
+  <!-- 口诀速记 -->
+  <div id="viewStudy" class="hidden">
+    <div class="card">
+      <div class="group">
+        <h3><span class="dot" style="background:#05994F"></span>近光灯</h3>
+        <div class="item">有路灯照明的道路行驶<b>能看清路况就用近光</b></div>
+        <div class="item">近距离跟车行驶<b>避免晃到前车</b></div>
+        <div class="item">通过有信号灯控制的路口</div>
+        <div class="item">无路灯照明，且对向车道150米内有车<b>只要提到「对向有车」就用近光</b></div>
+      </div>
+      <div class="group">
+        <h3><span class="dot" style="background:#0FDC78"></span>远光灯</h3>
+        <div class="item">在无路灯照明的道路上行驶<b>没提「对向有车」才能用远光</b></div>
+      </div>
+      <div class="group">
+        <h3><span class="dot" style="background:#EFAA17"></span>远近光灯交替 3 下</h3>
+        <div class="item">夜间通过拱桥</div>
+        <div class="item">夜间通过人行横道</div>
+        <div class="item">夜间通过无信号灯路口</div>
+        <div class="item">夜间通过急弯</div>
+      </div>
+      <div class="group">
+        <h3><span class="dot" style="background:#27D2BF"></span>转向灯</h3>
+        <div class="item">路口左转弯 → 开启左转向灯<b>超车除外，见下</b></div>
+        <div class="item">超车 → 左转向灯 + 远近光交替3下<b>两步缺一不可</b></div>
+      </div>
+      <div class="group">
+        <h3><span class="dot" style="background:#F87454"></span>雾灯 + 双闪</h3>
+        <div class="item">雾天行驶 → 雾灯 + 双闪<b>开远光会形成光幕，反而看不清</b></div>
+        <div class="item">大雨中行驶 → 雾灯 + 双闪</div>
+        <div class="item">临时停车 → 大灯关一档 + 双闪<b>不是关灯，留示廓灯</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">收藏本页，考前随时打开练一练</div>
+</div>
+
+<script>
+(function () {
+  var QUESTIONS = [
+    { q: "请开启前照灯", options: ["开启前照灯（近光灯）", "开启远光灯", "开启示廓灯", "打开双闪灯"], a: 0 },
+    { q: "在有路灯照明的道路上行驶", options: ["近光灯", "远光灯", "远近光灯交替3下", "雾灯"], a: 0 },
+    { q: "近距离跟车行驶", options: ["近光灯", "远光灯", "远近光灯交替3下", "示廓灯"], a: 0 },
+    { q: "通过有信号灯控制的路口", options: ["近光灯", "远光灯", "远近光灯交替3下", "开双闪灯"], a: 0,
+      tip: "有信号灯路口用近光；无信号灯路口才需要交替远近光。" },
+    { q: "无路灯照明，且对向车道150米内有车辆行驶", options: ["近光灯", "远光灯", "远近光灯交替3下", "雾灯、双闪灯"], a: 0,
+      tip: "只要提到「对向150米内有车」，就用近光。" },
+    { q: "夜间通过拱桥", options: ["远近光灯交替3下", "近光灯", "远光灯", "开双闪灯"], a: 0,
+      tip: "拱桥、急弯、坡道、人行横道、无信号灯路口，都要交替远近光。" },
+    { q: "夜间通过人行横道", options: ["远近光灯交替3下", "近光灯", "远光灯", "鸣喇叭提示"], a: 0 },
+    { q: "夜间通过无信号灯路口", options: ["远近光灯交替3下", "近光灯", "远光灯", "开启左转向灯"], a: 0 },
+    { q: "夜间通过急弯", options: ["远近光灯交替3下", "近光灯", "远光灯", "开双闪灯"], a: 0 },
+    { q: "路口左转弯", options: ["开启左转向灯", "开启右转向灯", "远近光灯交替3下", "开双闪灯"], a: 0,
+      tip: "向哪边转，就打哪边转向灯。" },
+    { q: "在无路灯照明的道路上行驶", options: ["远光灯", "近光灯", "远近光灯交替3下", "示廓灯"], a: 0,
+      tip: "和「对向150米内有车」区分：对向有车用近光，没提对向车时才用远光。" },
+    { q: "超车", options: ["先打左转向灯，再交替远近光3下", "只开左转向灯", "只开远光灯", "只交替远近光3下"], a: 0,
+      tip: "超车两步缺一不可：先打左转向灯，再交替远近光3下。" },
+    { q: "临时停车", options: ["大灯关一档，开双闪灯", "关闭所有灯光", "开远光灯", "只开双闪灯"], a: 0,
+      tip: "临时停车不是关灯：大灯关一档（留示廓灯），再开双闪。" },
+    { q: "雾天行驶", options: ["开雾灯、双闪灯", "开远光灯", "只开雾灯", "开近光灯"], a: 0,
+      tip: "雾天、大雨都是雾灯+双闪；雾天开远光会形成光幕，反而看不清。" },
+    { q: "大雨中行驶", options: ["开雾灯、双闪灯", "开远光灯", "开近光灯", "只开双闪灯"], a: 0 },
+    { q: "请关闭所有灯光", options: ["关闭所有灯光", "大灯关一档", "只关闭远光灯", "开双闪灯"], a: 0 }
+  ];
+
+  var total = QUESTIONS.length;
+  var body = document.getElementById("quizBody");
+  var scorePill = document.getElementById("scorePill");
+  var progressFill = document.getElementById("progressFill");
+  var tabQuiz = document.getElementById("tabQuiz");
+  var tabStudy = document.getElementById("tabStudy");
+  var viewQuiz = document.getElementById("viewQuiz");
+  var viewStudy = document.getElementById("viewStudy");
+
+  var order = [], qi = 0, picked = -1, correct = 0, wrongList = [];
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function shuffle() {
+    order = QUESTIONS.map(function (_, i) { return i; });
+    for (var i = order.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = order[i]; order[i] = order[j]; order[j] = t;
+    }
+  }
+
+  function updateMeta() {
+    scorePill.textContent = "答对 " + correct + " / " + total;
+    var done = qi + (picked >= 0 ? 1 : 0);
+    progressFill.style.width = (done / total * 100) + "%";
+  }
+
+  function renderQuiz() {
+    var item = QUESTIONS[order[qi]];
+    var answered = picked >= 0;
+    var isLast = qi === total - 1;
+    var html = '<div class="q-meta">第 ' + (qi + 1) + ' 题 / 共 ' + total + ' 题</div>' +
+      '<div class="q-text"><small>语音指令</small>' + esc(item.q) + '</div>';
+    for (var i = 0; i < item.options.length; i++) {
+      var cls = "opt";
+      if (answered) {
+        if (i === item.a) cls += " correct";
+        else if (i === picked) cls += " wrong";
+      }
+      html += '<button type="button" class="' + cls + '" data-idx="' + i + '"' +
+        (answered ? " disabled" : "") + ">" + esc(item.options[i]) + "</button>";
+    }
+    html += '<div class="feedback" id="fb">';
+    if (picked < 0) {
+      html += '<span style="color:var(--text-muted)">点击选项作答，答完显示评判和标准操作。</span>';
+    } else {
+      var good = picked === item.a;
+      html += '<div class="fb-line ' + (good ? "good" : "bad") + '">' + (good ? "回答正确" : "回答错误") + "</div>" +
+        '<div class="fb-op">标准操作：' + esc(item.options[item.a]) + "</div>";
+      if (item.tip) html += '<div class="fb-tip">' + esc(item.tip) + "</div>";
+    }
+    html += "</div>";
+    html += '<button type="button" class="btn" id="nextBtn"' + (answered ? "" : " disabled") + ">" +
+      (isLast ? "查看成绩" : "下一题") + "</button>";
+    body.innerHTML = html;
+    updateMeta();
+  }
+
+  function renderResult() {
+    progressFill.style.width = "100%";
+    var grade;
+    if (correct === total) grade = "满分！灯光操作已经烂熟于心，考试稳了。";
+    else if (correct >= 13) grade = "很扎实，把下面的错题再过一遍就完美了。";
+    else if (correct >= 9) grade = "基础不错，重点复习错题对应的灯光操作。";
+    else grade = "建议先看「口诀速记」背熟分类，再多练几轮。";
+    var html = '<div class="res-score">' + correct + ' / ' + total + "</div>" +
+      '<div class="res-grade">' + esc(grade) + "</div>";
+    if (wrongList.length) {
+      html += '<div class="res-sub">错题回顾（' + wrongList.length + "）</div>";
+      for (var i = 0; i < wrongList.length; i++) {
+        html += '<div class="wrow"><div class="wrow-q">' + esc(wrongList[i].q) + "</div>" +
+          '<div class="wrow-a">标准操作：' + esc(wrongList[i].a) + "</div></div>";
+      }
+    } else {
+      html += '<div class="res-sub" style="text-align:center;padding:8px 0">本次全部答对，没有错题</div>';
+    }
+    html += '<button type="button" class="btn" id="restartBtn" style="margin-top:12px">再来一轮</button>';
+    body.innerHTML = html;
+    updateMeta();
+  }
+
+  body.addEventListener("click", function (e) {
+    var opt = e.target.closest(".opt");
+    if (opt && !opt.disabled && picked < 0) {
+      picked = parseInt(opt.getAttribute("data-idx"), 10);
+      var item = QUESTIONS[order[qi]];
+      if (picked === item.a) correct++;
+      else wrongList.push({ q: item.q, a: item.options[item.a] });
+      renderQuiz();
+      return;
+    }
+    if (e.target.id === "nextBtn" && picked >= 0) {
+      if (qi < total - 1) { qi++; picked = -1; renderQuiz(); }
+      else renderResult();
+      return;
+    }
+    if (e.target.id === "restartBtn") {
+      shuffle(); qi = 0; picked = -1; correct = 0; wrongList = [];
+      renderQuiz();
+    }
+  });
+
+  tabQuiz.addEventListener("click", function () {
+    tabQuiz.classList.add("active"); tabStudy.classList.remove("active");
+    viewQuiz.classList.remove("hidden"); viewStudy.classList.add("hidden");
+  });
+  tabStudy.addEventListener("click", function () {
+    tabStudy.classList.add("active"); tabQuiz.classList.remove("active");
+    viewStudy.classList.remove("hidden"); viewQuiz.classList.add("hidden");
+  });
+
+  shuffle();
+  renderQuiz();
+})();
+</script>
+</body>
+</html>
